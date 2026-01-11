@@ -138,9 +138,9 @@ sync_hosts() {
 	if grep -qF "$HOSTS_BEGIN" "$HOSTS_DST" && grep -qF "$HOSTS_END" "$HOSTS_DST"; then
 		current_block="$(
 			awk -v b="$HOSTS_BEGIN" -v e="$HOSTS_END" '
-				$0==b {in=1; next}
-				$0==e {in=0; exit}
-				in==1 {print}
+				$0==b {inside=1; next}
+				$0==e {inside=0; exit}
+				inside==1 {print}
 			' "$HOSTS_DST"
 		)"
 		new_block="$(cat "$HOSTS_SRC")"
@@ -156,11 +156,11 @@ sync_hosts() {
 				print
 				while ((getline line < src) > 0) print line
 				close(src)
-				in=1
+				inside=1
 				next
 			}
-			in==1 && $0==e { in=0; print; next }
-			in==1 { next }
+			inside==1 && $0==e { inside=0; print; next }
+			inside==1 { next }
 			{ print }
 		' "$HOSTS_DST" > "$tmp_hosts"
 
