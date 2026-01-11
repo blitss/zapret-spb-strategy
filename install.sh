@@ -136,39 +136,42 @@ sync_hosts() {
 
 	# If block exists, compare and replace if needed
 	if grep -qF "$HOSTS_BEGIN" "$HOSTS_DST" && grep -qF "$HOSTS_END" "$HOSTS_DST"; then
-		current_block="$(
-			awk -v b="$HOSTS_BEGIN" -v e="$HOSTS_END" '
-				$0==b {inside=1; next}
-				$0==e {inside=0; exit}
-				inside==1 {print}
-			' "$HOSTS_DST"
-		)"
-		new_block="$(cat "$HOSTS_SRC")"
+		bline="$(grep -nF "$HOSTS_BEGIN" "$HOSTS_DST" | head -n 1 | cut -d: -f1)"
+		eline="$(grep -nF "$HOSTS_END" "$HOSTS_DST" | head -n 1 | cut -d: -f1)"
 
-		if [ "$current_block" = "$new_block" ]; then
-			echo "  Unchanged /etc/hosts"
+		# sanity: if markers are broken, just append a fresh block
+		if [ -z "$bline" ] || [ -z "$eline" ] || [ "$bline" -ge "$eline" ]; then
+			echo "  Warning: /etc/hosts markers are invalid; appending a new block"
+		else
+			current_block="$(sed -n "$((bline+1)),$((eline-1))p" "$HOSTS_DST")"
+			new_block="$(cat "$HOSTS_SRC")"
+
+			if [ "$current_block" = "$new_block" ]; then
+				echo "  Unchanged /etc/hosts"
+				return 0
+			fi
+
+			tmp_hosts="$(mktemp)"
+			{
+				# before begin marker (excluding it)
+				if [ "$bline" -gt 1 ]; then
+					head -n $((bline-1)) "$HOSTS_DST"
+				fi
+				echo "$HOSTS_BEGIN"
+				cat "$HOSTS_SRC"
+				# ensure the END marker is on its own line even if $HOSTS_SRC has no trailing newline
+				printf '\n'
+				echo "$HOSTS_END"
+				# after end marker (excluding it)
+				tail -n +"$((eline+1))" "$HOSTS_DST" 2>/dev/null || true
+			} > "$tmp_hosts"
+
+			cp "$HOSTS_DST" "${HOSTS_DST}.bak" 2>/dev/null || true
+			cat "$tmp_hosts" > "$HOSTS_DST"
+			rm -f "$tmp_hosts"
+			echo "  Updated /etc/hosts"
 			return 0
 		fi
-
-		tmp_hosts="$(mktemp)"
-		awk -v b="$HOSTS_BEGIN" -v e="$HOSTS_END" -v src="$HOSTS_SRC" '
-			$0==b {
-				print
-				while ((getline line < src) > 0) print line
-				close(src)
-				inside=1
-				next
-			}
-			inside==1 && $0==e { inside=0; print; next }
-			inside==1 { next }
-			{ print }
-		' "$HOSTS_DST" > "$tmp_hosts"
-
-		cp "$HOSTS_DST" "${HOSTS_DST}.bak" 2>/dev/null || true
-		cat "$tmp_hosts" > "$HOSTS_DST"
-		rm -f "$tmp_hosts"
-		echo "  Updated /etc/hosts"
-		return 0
 	fi
 
 	# Block not present -> append
@@ -176,6 +179,8 @@ sync_hosts() {
 		echo ""
 		echo "$HOSTS_BEGIN"
 		cat "$HOSTS_SRC"
+		# ensure the END marker is on its own line even if $HOSTS_SRC has no trailing newline
+		printf '\n'
 		echo "$HOSTS_END"
 	} >> "$HOSTS_DST"
 	echo "  Updated /etc/hosts (appended block)"
