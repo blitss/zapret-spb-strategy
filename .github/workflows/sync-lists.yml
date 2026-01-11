@@ -1,0 +1,48 @@
+name: Sync lists
+
+on:
+  workflow_dispatch:
+  schedule:
+    # daily at 03:15 UTC
+    - cron: "15 3 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-lists
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run sync-lists.sh
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x ./sync-lists.sh
+          ./sync-lists.sh
+
+      - name: Commit & push changes (if any)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet; then
+            echo "No changes."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add ipset/
+          git commit -m "chore: sync lists ($(date -u +%Y-%m-%d))"
+          git push
+
