@@ -1,5 +1,11 @@
 # unf*ck your internet (OpenWrt)
 
+very opinionated project to unf*ck your internet in Russia by combining:
+
+* DPI circumvention (using zapret)
+* Cloudflare WARP (where DPI bypass no longer possible or not stable enough) - using sing-box. 
+* regional blocks (using EU VPN) - using Amnezia and Red Shield VPN, for services like OpenAI
+
 Cтратегия для `zapret`, с идеей **таргетить только заблокированные домены + подсети CDN (Cloudflare/Hetzner/Amazon и др.)**, а не применять tampering “ко всему подряд”.
 
 ## Что это
