@@ -21,13 +21,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Run sync-lists.sh
-        shell: bash
-        run: |
-          set -euo pipefail
-          chmod +x ./sync-lists.sh
-          ./sync-lists.sh
+      - uses: oven-sh/setup-bun@v2
+      - run: bun sync-lists.ts
 
       - name: Commit & push changes (if any)
         shell: bash
@@ -45,4 +40,3 @@ jobs:
           git add ipset/
           git commit -m "chore: sync lists ($(date -u +%Y-%m-%d))"
           git push
-

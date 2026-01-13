@@ -61,11 +61,13 @@ echo "Fetching repository files into ${ZAPRET_DIR} ..."
 
 fetch_file() {
 	local repo_path="$1"
-	local target_path="${ZAPRET_DIR}/${repo_path}"
+	# strip "zapret/" prefix for target path
+	local rel_path="${repo_path#zapret/}"
+	local target_path="${ZAPRET_DIR}/${rel_path}"
 	local url="${RAW_BASE_URL}/${repo_path}"
 
 	mkdir -p "$(dirname "$target_path")"
-	echo "  - ${repo_path}"
+	echo "  - ${rel_path}"
 	curl -fsSL "$url" -o "$target_path"
 }
 
@@ -101,27 +103,19 @@ printf '%s\n' "$paths" | while IFS= read -r p; do
 	t="$(printf '%s\n' "$types" | sed -n "${i}p")"
 	[ "$t" = "blob" ] || continue
 
-	# Skip GitHub workflows
+	# Only fetch files from zapret/ folder
 	case "$p" in
-		.github/workflows/*) continue ;;
-	esac
-
-	# Skip installer itself (optional; harmless if kept, but avoids overwriting while running)
-	case "$p" in
-		install.sh) continue ;;
-	esac
-	# Internal repo maintenance only (handled by workflow in repo, not on router)
-	case "$p" in
-		sync-lists.sh) continue ;;
+		zapret/*) ;;
+		*) continue ;;
 	esac
 
 	fetch_file "$p"
 done
 
-[ -d "${ZAPRET_DIR}/init.d" ] && find "${ZAPRET_DIR}/init.d" -type f -name '*.sh' -exec chmod +x {} \; 2>/dev/null || true
+find "${ZAPRET_DIR}" -type f -name '*.sh' -exec chmod +x {} \; 2>/dev/null || true
 
 # Step 2.5: Sync /etc/hosts from repo (optional)
-# /opt/zapret/hosts is downloaded from the repo; we apply it into /etc/hosts via a managed block.
+# /opt/zapret/hosts is downloaded from the repo (from zapret/hosts in repo); we apply it into /etc/hosts via a managed block.
 echo "Syncing /etc/hosts (if needed)..."
 HOSTS_SRC="${ZAPRET_DIR}/hosts"
 HOSTS_DST="/etc/hosts"

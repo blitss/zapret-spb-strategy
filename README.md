@@ -1,4 +1,4 @@
-# zapret-spb-strategy (OpenWrt)
+# unf*ck your internet (OpenWrt)
 
 Cтратегия для `zapret`, с идеей **таргетить только заблокированные домены + подсети CDN (Cloudflare/Hetzner/Amazon и др.)**, а не применять tampering “ко всему подряд”.
 

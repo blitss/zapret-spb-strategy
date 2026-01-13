@@ -1,0 +1,10 @@
+{
+  "name": "zapret-spb-strategy",
+  "type": "module",
+  "scripts": {
+    "sync": "bun run sync-lists.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.6"
+  }
+}
