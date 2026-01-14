@@ -1,0 +1,66 @@
+name: Build sing-box for OpenWRT
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Weekly on Sunday at 04:00 UTC
+    - cron: "0 4 * * 0"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      TAGS: "with_clash_api"
+    steps:
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+
+      - name: Clone sing-box
+        run: git clone --depth 1 https://github.com/SagerNet/sing-box.git
+
+      - name: Get version
+        id: version
+        working-directory: sing-box
+        run: |
+          VERSION=$(go run ./cmd/internal/read_tag)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build
+        working-directory: sing-box
+        env:
+          CGO_ENABLED: "0"
+          GOOS: linux
+          GOARCH: arm64
+        run: |
+          make build TAGS="$TAGS"
+          ls -lh sing-box
+          mkdir -p dist
+          mv sing-box dist/
+
+      - name: Package OpenWrt IPK
+        working-directory: sing-box
+        run: |
+          sudo gem install fpm
+          cp .fpm_openwrt .fpm
+          fpm -t deb \
+            -v "${{ steps.version.outputs.version }}" \
+            -p "dist/openwrt.deb" \
+            --architecture all \
+            dist/sing-box=/usr/bin/sing-box
+          .github/deb2ipk.sh aarch64_cortex-a53 dist/openwrt.deb "dist/sing-box_${{ steps.version.outputs.version }}_aarch64_cortex-a53.ipk"
+          rm dist/openwrt.deb
+          ls -lh dist/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: sing-box-${{ steps.version.outputs.version }}
+          name: sing-box ${{ steps.version.outputs.version }}
+          body: |
+            Minimal sing-box build for OpenWRT aarch64_cortex-a53
+            
+            **Build tags:** `${{ env.TAGS }}`
+          files: |
+            sing-box/dist/*
