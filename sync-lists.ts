@@ -20,13 +20,6 @@ await download(
   "cust2.txt"
 )
 
-// alibaba
-const aliRes = await fetch(
-  "https://raw.githubusercontent.com/ipverse/as-ip-blocks/refs/heads/master/as/45102/ipv4-aggregated.txt"
-)
-await Bun.write(`${DIR}/cust2.txt`, (await Bun.file(`${DIR}/cust2.txt`).text()) + "\n" + dropComments(await aliRes.text()))
-console.log("Appending alibaba to cust2.txt...")
-
 await download(
   "https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/RKN/List.txt",
   "zapret-hosts-user.txt"
