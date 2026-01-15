@@ -4,7 +4,9 @@ very opinionated project to unf*ck your internet in Russia by combining:
 
 * DPI circumvention (using zapret)
 * ~~Cloudflare WARP (where DPI bypass no longer possible or not stable enough) - using sing-box.~~ в итоге отказался от этой идеи из-за того что warp работает нестабильно
-* regional blocks (using EU VPN) - using Vless and Red Shield VPN, for services like OpenAI
+* regional blocks (using EU VPN) - using Vless and [Red Shield VPN](https://new2.redshieldvpn.info/?r=0QLBpDjBaPO9OwhWLRo5), for services like OpenAI
+
+# Настройка Zapret
 
 Cтратегия для `zapret`, с идеей **таргетить только заблокированные домены + подсети CDN (Cloudflare/Hetzner/Amazon и др.)**, а не применять tampering “ко всему подряд”.
 
@@ -41,15 +43,24 @@ netsh interface tcp set global timestamps=enabled
 - парсит `config.yaml` через `yq` и проставляет `uci set zapret.config.<KEY>=...`
 - запускает `/opt/zapret/sync_config.sh`
 
-Пример:
+Чтобы запустить:
 
 ```sh
 curl -fsSL "https://raw.githubusercontent.com/blitss/zapret-spb-strategy/main/install.sh" | sh
 ```
 
-## Обновление списков (в репозитории)
+# Настройка sing-box и полноценного обхода
 
-Workflow `.github/workflows/sync-lists.yml` запускает `sync-lists.sh` **раз в сутки** и коммитит изменения в `ipset/`.
+#### Про VPN который я использую
+
+Red shield vpn - очень классный vpn, которым я пользуюсь сам. Они дают возможность сгенерить конфиг для vless/amnezia/и т.д. + у них есть приложения под все платформы. За 1.5 года у меня ни разу не было ситуации что он не работал + у них есть возможность обхода белых списков, когда работает только мессенджер макс и Яндекс Карты. Это в тысячу раз лучше чем пытаться настроить свой VPN сервер (я прошел через этот путь) просто потому что такой вариант постоянно отваливается, а у ребят все работает как часы. Можно зарегистрироваться по моей ссылке и вам и мне дадут месяц как подарок: https://new2.redshieldvpn.info/?r=0QLBpDjBaPO9OwhWLRo5
+
+<details>
+  <summary>Вот скорость которая получается через vless на роутере и VPN:</summary>
+  <img width="414" height="399" alt="image" src="https://github.com/user-attachments/assets/7d19c308-4447-4311-9511-65a2dec02c2c" />
+</details>
+
+Я использую podkop чтобы он управлял sing-box и запускал его. Тут пока что нет детальных инструкций и скрипта по настройке, но можно посмотреть списки которые я использую и добавить их самому, если вы знаете как это делается: https://github.com/blitss/unfk-your-internet/tree/main/sing-box
 
 ## Credits
 
