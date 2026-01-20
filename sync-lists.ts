@@ -21,6 +21,11 @@ await download(
 )
 
 await download(
+  "https://raw.githubusercontent.com/123jjck/cdn-ip-ranges/refs/heads/main/akamai/akamai_plain_ipv4.txt",
+  "akamai.txt"
+)
+
+await download(
   "https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/RKN/List.txt",
   "zapret-hosts-user.txt"
 )

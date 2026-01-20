@@ -3,6 +3,13 @@ NFQWS_PORTS_UDP: 443,596-599,1024-65535
 MODE_FILTER: autohostlist
 FLOWOFFLOAD: hardware
 
+# Akamai exclusion block (prepended to NFQWS_OPT when --no-akamai flag is used)
+NFQWS_OPT_NO_AKAMAI: |
+  # exclude akamai from handling
+  --filter-tcp=80,443
+  --ipset=/opt/zapret/ipset/akamai.txt
+  --new
+
 NFQWS_OPT: |
   # youtube tcp
   --filter-tcp=80,443

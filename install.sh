@@ -5,6 +5,16 @@
 
 set -e
 
+# Parse command-line arguments
+NO_AKAMAI=0
+for arg in "$@"; do
+	case "$arg" in
+		--no-akamai)
+			NO_AKAMAI=1
+			;;
+	esac
+done
+
 # Repo configuration (override via env)
 REPO_OWNER="${REPO_OWNER:-blitss}"
 REPO_NAME="${REPO_NAME:-zapret-spb-strategy}"
@@ -15,6 +25,9 @@ ZAPRET_DIR="/opt/zapret"
 
 echo "=== Zapret SPB Strategy Installer ==="
 echo "Repository: ${REPO_OWNER}/${REPO_NAME}@${REPO_REF}"
+if [ "$NO_AKAMAI" -eq 1 ]; then
+	echo "Option: --no-akamai (excluding akamai from DPI handling)"
+fi
 echo ""
 
 need_cmd() {
@@ -55,6 +68,16 @@ mkdir -p "$ZAPRET_DIR"
 echo "Fetching configuration..."
 CONFIG_YAML=$(mktemp)
 curl -fsSL "${RAW_BASE_URL}/config.yaml" -o "$CONFIG_YAML"
+
+# Step 1.5: Prepend NFQWS_OPT_NO_AKAMAI to NFQWS_OPT if --no-akamai flag is set
+if [ "$NO_AKAMAI" -eq 1 ]; then
+	echo "Applying --no-akamai: excluding akamai from handling..."
+	# Concatenate NFQWS_OPT_NO_AKAMAI + NFQWS_OPT using yq
+	yq eval -i '.NFQWS_OPT = .NFQWS_OPT_NO_AKAMAI + "\n" + .NFQWS_OPT' "$CONFIG_YAML"
+fi
+
+# Remove NFQWS_OPT_NO_AKAMAI from config (not needed for UCI)
+yq eval -i 'del(.NFQWS_OPT_NO_AKAMAI)' "$CONFIG_YAML"
 
 # Step 2: Fetch all repo files (no git; use GitHub API tree; do not enumerate manually)
 echo "Fetching repository files into ${ZAPRET_DIR} ..."

@@ -48,6 +48,18 @@ netsh interface tcp set global timestamps=enabled
 curl -fsSL "https://raw.githubusercontent.com/blitss/zapret-spb-strategy/main/install.sh" | sh
 ```
 
+### Опции установки
+
+| Флаг | Описание |
+|------|----------|
+| `--no-akamai` | Исключает Akamai CDN из DPI-обработки. Полезно если возникают проблемы с сервисами использующими Akamai (например, EA Play, Nvidia, и т.д.). |
+
+Пример установки с исключением Akamai:
+
+```sh
+curl -fsSL "https://raw.githubusercontent.com/blitss/zapret-spb-strategy/main/install.sh" | sh -s -- --no-akamai
+```
+
 # Настройка sing-box и полноценного обхода
 
 К сожалению, zapret не дает 100% гарантии что все будет работать как надо (WA у меня так и не получилось сделать, например), и многие сервисы блокируют доступ с российских айпи. К тому же, РКН периодически что-то меняет и подкручивает, поэтому стратегии со временем отваливаются. Так я пришел к комбинированному подходу, где какие-то айпи и домены ходят через VPN.
