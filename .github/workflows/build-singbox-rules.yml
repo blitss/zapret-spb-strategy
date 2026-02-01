@@ -8,6 +8,7 @@ on:
       - "sing-box/lists/**"
       - "sing-box/config.yaml"
       - "sing-box/compile-rules.ts"
+      - ".github/workflows/build-singbox-rules.yml"
   workflow_dispatch:
   schedule:
     # daily at 03:15 UTC
@@ -24,22 +25,11 @@ jobs:
       - name: Setup Go ${{ matrix.go-version }}
         uses: actions/setup-go@v5
       - uses: oven-sh/setup-bun@v2
-      - run: go install github.com/sagernet/sing-box/cmd/sing-box@latest
+      - run: go install github.com/sagernet/sing-box/cmd/sing-box@v1.12.19
 
       - run: bun install
       - run: bun sing-box/compile-rules.ts
 
-      - run: |
-          set -euo pipefail
-
-          if git diff --quiet; then
-            echo "No changes."
-            exit 0
-          fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git add .
-          git commit -m "chore: sync sing-box rules ($(date -u +%Y-%m-%d))"
-          git push
+      - uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "chore: compile sing-box rules ($(date -u +%Y-%m-%d))"

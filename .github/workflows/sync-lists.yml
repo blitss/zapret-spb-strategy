@@ -24,19 +24,6 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun sync-lists.ts
 
-      - name: Commit & push changes (if any)
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          if git diff --quiet; then
-            echo "No changes."
-            exit 0
-          fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git add zapret/ipset/
-          git commit -m "chore: sync lists ($(date -u +%Y-%m-%d))"
-          git push
+      - uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "chore: sync lists ($(date -u +%Y-%m-%d))"
